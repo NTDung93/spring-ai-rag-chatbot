@@ -27,8 +27,11 @@ import org.springframework.retry.support.RetryTemplate;
 public class RagConfiguration {
     private static Logger logger = Logger.getLogger(RagConfiguration.class);
 
+    @Value("classpath:/docs/olympic-faq.txt")
+    private Resource olympicFaq;
+
     @Value("classpath:/docs/greenz-faq.txt")
-    private Resource faq;
+    private Resource greenzFaq;
 
     @Value("vectorstore.json")
     private String vectorStoreName;
@@ -46,17 +49,28 @@ public class RagConfiguration {
         SimpleVectorStore simpleVectorStore = new SimpleVectorStore(embeddingModel);
         try {
             File vectorStoreFile = getVectorStoreFile();
+
             if (vectorStoreFile.exists()) {
+
                 logger.info("Vector Store File Exists");
                 simpleVectorStore.load(vectorStoreFile);
             } else {
+
                 logger.info("Vector Store File Does Not Exist, loading documents");
-                TextReader textReader = new TextReader(faq);
-                textReader.getCustomMetadata().put("filename", "greenz-faq.txt");
-                List<Document> documents = textReader.get();
                 TextSplitter textSplitter = new TokenTextSplitter();
+
+                TextReader textReader = new TextReader(olympicFaq);
+                textReader.getCustomMetadata().put("filename", "olympic-faq.txt");
+                List<Document> documents = textReader.get();
                 List<Document> splitDocuments = textSplitter.apply(documents);
                 simpleVectorStore.add(splitDocuments);
+
+                TextReader textReader2 = new TextReader(greenzFaq);
+                textReader2.getCustomMetadata().put("filename", "greenz-faq.txt");
+                List<Document> documents2 = textReader2.get();
+                List<Document> splitDocuments2 = textSplitter.apply(documents2);
+                simpleVectorStore.add(splitDocuments2);
+
                 simpleVectorStore.save(vectorStoreFile);
             }
         } catch (Exception e) {

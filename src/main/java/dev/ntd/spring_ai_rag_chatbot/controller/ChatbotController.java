@@ -41,15 +41,15 @@ public class ChatbotController {
     public String chat(@RequestParam(value = "message", defaultValue = "How can i buy tickets for the olympic games paris 2024?") String message) {
         List<Document> similarDocuments = vectorStore.similaritySearch(SearchRequest.query(message).withTopK(2));
         List<String> contentList = similarDocuments.stream().map(Document::getContent).toList();
+
         PromptTemplate promptTemplate = new PromptTemplate(ragPromptTemplate);
+
         Map<String, Object> promptParameters = new HashMap<>();
         promptParameters.put("input", message);
         promptParameters.put("documents", String.join("\n", contentList));
+
         Prompt prompt = promptTemplate.create(promptParameters);
+
         return chatClient.prompt(prompt).call().content();
-//        return chatClient.prompt()
-//                .user(message)
-//                .call()
-//                .content();
     }
 }
